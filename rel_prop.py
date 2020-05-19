@@ -49,7 +49,7 @@ test_images = test_images / 255.
 model = tf.keras.models.load_model('./models/rel_prop_model.h5')
 
 first_weights = model.weights[0].numpy()
-print(first_weights.shape)
+
 second_weights = model.weights[1].numpy()
 
 # Hilfsmodel zum Extrahieren der Outputs des Hidden Layers
@@ -92,16 +92,44 @@ def rel_prop(input: np.ndarray) -> np.ndarray:
     return relevance
 
 
+def plot_value_array(predictions_array, true_label):
+
+    plt.grid(False)
+    plt.xticks(range(10))
+    plt.yticks([])
+    thisplot = plt.bar(range(10), predictions_array, color="#777777")
+    plt.ylim([0, 1])
+    predicted_label = np.argmax(predictions_array)
+
+    thisplot[predicted_label].set_color('red')
+    thisplot[true_label].set_color('blue')
+
+
+labels = {0:'airplane', 1:'automobile', 2:'bird', 3:'cat', 4:'deer', 5:'dog', 6:'frog', 7:'horse', 8:'ship', 9:'truck'}
+
 # Test und Visualisierung
 for i in range(0,5):
-    image = train_images[i+40]
+    idx = i+600
+    image = train_images[idx]
+    label = labels[train_labels[idx][0]]
     test = rel_prop(np.array([image]))
     test = np.sum(test, axis=2)
 
-    plt.subplot(2,5,i+1)
+    plt.subplot(3,5,i+1)
+    plt.xticks([])
+    plt.yticks([])
+    plt.grid(False)
+    plt.xlabel(label)
     plt.imshow(image)
-    plt.subplot(2,5,i+6)
+    plt.subplot(3,5,i+6)
+    plt.xticks([])
+    plt.yticks([])
+    plt.grid(False)
     plt.imshow(test, cmap='cividis')
+    plt.subplot(3,5,i+11)
+    pred = model.predict(np.array([image]))[0]
+    plot_value_array(pred, train_labels[idx][0])
+
 plt.show()
 
 
