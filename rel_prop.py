@@ -17,36 +17,47 @@ test_images = test_images / 255.
 
 # TODO: Scaling zu SandardScaler ändern.. hilft vielleicht
 
-# model = Sequential([
-#     Conv2D(filters=32, kernel_size=(3, 3), activation='relu', input_shape=(32, 32, 3)),
-#     MaxPooling2D(pool_size=(2, 2)),
-#     Flatten(),
-#     Dense(10, activation='softmax')
-# ])
-#
-# model = Sequential([
-#     Flatten(),
-#     Dense(4096, activation='relu'),
-#     Dense(10, activation='softmax')
-# ])
+save = False
 
-# model.summary()
-#
-# model.compile(loss='sparse_categorical_crossentropy',
-#               optimizer=Adam(),
-#               metrics=['acc'])
-#
-# model.fit(
-#     train_images,
-#     train_labels,
-#     epochs=10,
-#     batch_size=1000,
-#     validation_data=(test_images, test_labels)
-# )
+def get_model():
+    model = Sequential([
+        Conv2D(filters=32, kernel_size=(3, 3), activation='relu', input_shape=(32, 32, 3)),
+        MaxPooling2D(pool_size=(2, 2)),
+        Flatten(),
+        Dense(10, activation='softmax')
+    ])
 
-# model.save('./models/rel_prop_model.h5')
+    model = Sequential([
+        Flatten(),
+        Dense(4096, activation='relu'),
+        Dense(10, activation='softmax')
+    ])
 
-model = tf.keras.models.load_model('./models/rel_prop_model.h5')
+    model.summary()
+
+    model.compile(loss='sparse_categorical_crossentropy',
+                optimizer=Adam(),
+                metrics=['acc'])
+    
+    return model
+
+
+
+def fit_model(model, epochs, batch_size, data):
+    model.fit(
+        train_images,
+        train_labels,
+        epochs=epochs,
+        batch_size=batch_size,
+        validation_data=data
+    )
+
+model = get_model()
+fit_model(model, 50, 10000, (test_images, test_labels))
+
+if save==True:
+    model.save('./models/rel_prop_model.h5')
+    model = tf.keras.models.load_model('./models/rel_prop_model.h5')
 
 first_weights = model.weights[0].numpy()
 
