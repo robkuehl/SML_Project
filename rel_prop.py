@@ -24,29 +24,29 @@ test_images = test_images / 255.
 #     Dense(10, activation='softmax')
 # ])
 #
-# model = Sequential([
-#     Flatten(),
-#     Dense(4096, activation='relu'),
-#     Dense(10, activation='softmax')
-# ])
+model = Sequential([
+    Flatten(input_shape=(32,32,3)),
+    Dense(4096, activation='relu', use_bias=False),
+    Dense(10, activation='softmax', use_bias=False)
+])
 
-# model.summary()
-#
-# model.compile(loss='sparse_categorical_crossentropy',
-#               optimizer=Adam(),
-#               metrics=['acc'])
-#
-# model.fit(
-#     train_images,
-#     train_labels,
-#     epochs=10,
-#     batch_size=1000,
-#     validation_data=(test_images, test_labels)
-# )
+model.summary()
 
-# model.save('./models/rel_prop_model.h5')
+model.compile(loss='sparse_categorical_crossentropy',
+              optimizer=Adam(),
+              metrics=['acc'])
 
-model = tf.keras.models.load_model('./models/rel_prop_model.h5')
+model.fit(
+    train_images,
+    train_labels,
+    epochs=10,
+    batch_size=1000,
+    validation_data=(test_images, test_labels)
+)
+
+model.save('./models/rel_prop_model.h5')
+
+# model = tf.keras.models.load_model('./models/rel_prop_model.h5')
 
 first_weights = model.weights[0].numpy()
 
@@ -78,7 +78,7 @@ def rel_prop(input: np.ndarray) -> np.ndarray:
     R1 = np.dot(fraction, R2)
 
     # Berechnung von R0
-    nominator = np.multiply(np.transpose(R1),
+    nominator = np.multiply(np.transpose(flattened_input),
                             first_weights)
 
     denominator = np.matmul(flattened_input,
