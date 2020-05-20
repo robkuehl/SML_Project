@@ -6,50 +6,58 @@ from tensorflow.keras.layers import ReLU
 from tensorflow.keras.optimizers import Adam
 from sklearn.preprocessing import StandardScaler
 from tensorflow.keras.activations import softmax, relu
-from tensorflow.keras.datasets import cifar10
+from tensorflow.keras.datasets import cifar10, mnist
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
-(train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.cifar10.load_data()
+load_saved_model = False
+data_switch = 1 # 0: Cifar10
+                # 1: MNIST
+
+if data_switch:
+    dataset = mnist
+else:
+    dataset = cifar10
+
+(train_images, train_labels), (test_images, test_labels) = dataset.load_data()
 train_images = train_images / 255.
 test_images = test_images / 255.
-# X_train_sc = StandardScaler().fit_transform(X_train, y_train)
 
-# TODO: Scaling zu SandardScaler ändern.. hilft vielleicht
+if load_saved_model:
+    model = tf.keras.models.load_model('./models/rel_prop_model.h5')
 
-# model = Sequential([
-#     Conv2D(filters=32, kernel_size=(3, 3), activation='relu', input_shape=(32, 32, 3)),
-#     MaxPooling2D(pool_size=(2, 2)),
-#     Flatten(),
-#     Dense(10, activation='softmax')
-# ])
-#
-model = Sequential([
-    Flatten(input_shape=(32,32,3)),
-    Dense(4096, activation='relu', use_bias=False),
-    Dense(10, activation='softmax', use_bias=False)
-])
+else:
+    if data_switch:
+        model = Sequential([
+            Flatten(input_shape=(28,28)),
+            Dense(128, activation='relu', use_bias=False),
+            Dense(10, activation='softmax', use_bias=False)
+        ])
 
-model.summary()
+    else:
+        model = Sequential([
+            Flatten(input_shape=(32,32,3)),
+            Dense(4096, activation='relu', use_bias=False),
+            Dense(10, activation='softmax', use_bias=False)
+        ])
 
-model.compile(loss='sparse_categorical_crossentropy',
-              optimizer=Adam(),
-              metrics=['acc'])
+    model.summary()
 
-model.fit(
-    train_images,
-    train_labels,
-    epochs=10,
-    batch_size=1000,
-    validation_data=(test_images, test_labels)
-)
+    model.compile(loss='sparse_categorical_crossentropy',
+                  optimizer=Adam(),
+                  metrics=['acc'])
 
-model.save('./models/rel_prop_model.h5')
+    model.fit(
+        train_images,
+        train_labels,
+        epochs=10,
+        batch_size=10,
+        validation_data=(test_images, test_labels)
+    )
 
-# model = tf.keras.models.load_model('./models/rel_prop_model.h5')
+    model.save('./models/rel_prop_model.h5')
 
 first_weights = model.weights[0].numpy()
-
 second_weights = model.weights[1].numpy()
 
 # Hilfsmodel zum Extrahieren der Outputs des Hidden Layers
@@ -78,7 +86,7 @@ def rel_prop(input: np.ndarray) -> np.ndarray:
     R1 = np.dot(fraction, R2)
 
     # Berechnung von R0
-    nominator = np.multiply(np.transpose(flattened_input),
+    nominator = np.multiply(np.transpose(R1),
                             first_weights)
 
     denominator = np.matmul(flattened_input,
@@ -87,7 +95,7 @@ def rel_prop(input: np.ndarray) -> np.ndarray:
     fraction = np.divide(nominator, denominator)
     R0 = np.dot(fraction, R1)
 
-    relevance = np.reshape(R0,(32,32,3))
+    relevance = np.reshape(R0,input[0].shape)
 
     return relevance
 
@@ -111,9 +119,9 @@ labels = {0:'airplane', 1:'automobile', 2:'bird', 3:'cat', 4:'deer', 5:'dog', 6:
 for i in range(0,5):
     idx = i+600
     image = train_images[idx]
-    label = labels[train_labels[idx][0]]
+    label = labels[train_labels[idx]]
     test = rel_prop(np.array([image]))
-    test = np.sum(test, axis=2)
+    #test = np.sum(test, axis=2)
 
     plt.subplot(3,5,i+1)
     plt.xticks([])
@@ -128,7 +136,7 @@ for i in range(0,5):
     plt.imshow(test, cmap='cividis')
     plt.subplot(3,5,i+11)
     pred = model.predict(np.array([image]))[0]
-    plot_value_array(pred, train_labels[idx][0])
+    plot_value_array(pred, train_labels[idx])
 
 plt.show()
 
