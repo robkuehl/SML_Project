@@ -33,7 +33,7 @@ def get_model():
         Dense(10, activation='softmax')
     ])
 
-    model.summary()
+    #model.summary()
 
     model.compile(loss='sparse_categorical_crossentropy',
                 optimizer=Adam(),
