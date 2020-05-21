@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
@@ -72,7 +74,7 @@ def get_weights(model: tf.keras.Sequential) -> (np.ndarray, np.ndarray):
 
 
 # Funktion für Relevance Propagation
-def rel_prop(model: tf.keras.Sequential, extractor: tf.keras.Model, input: np.ndarray, weights: tuple) -> np.ndarray:
+def rel_prop(model: tf.keras.Sequential, extractor: tf.keras.Model, input: np.ndarray, weights: tuple, eps: float = 0, beta: float = 0) -> np.ndarray:
     first_weights, second_weights = weights
 
     features = extractor(np.array([input]))
@@ -84,29 +86,59 @@ def rel_prop(model: tf.keras.Sequential, extractor: tf.keras.Model, input: np.nd
     # Berechnung von R1
     r2 = np.transpose(output)
 
-    nominator = np.multiply(np.transpose(hidden_output),
-                            second_weights)
+    r1 = calc_r(r=r2,
+                output=hidden_output,
+                weights=second_weights,
+                eps=eps,
+                beta=beta)
 
-    denominator = np.matmul(hidden_output,
-                            second_weights)
-
-    fraction = np.divide(nominator, denominator)
-    r1 = np.dot(fraction, r2)
-
-    # Berechnung von R0
-    nominator = np.multiply(np.transpose(flattened_input),
-                            first_weights)
-
-    denominator = np.matmul(flattened_input,
-                            first_weights)
-
-    fraction = np.divide(nominator, denominator)
-    r0 = np.dot(fraction, r1)
+    r0 = calc_r(r=r1,
+                output=flattened_input,
+                weights=first_weights,
+                eps=eps,
+                beta=beta)
 
     relevance = np.reshape(r0, (28, 28))
 
     return relevance
 
+
+def calc_r(r: np.ndarray, output: np.ndarray, weights: np.ndarray, eps: int = 0, beta: int = None):
+
+    nominator = np.multiply(np.transpose(output),
+                            weights)
+
+    if beta is not None:
+        if eps:
+            print('+++ERROR+++')
+            print('Choose either EPS or BETA, not both!')
+            print('+++ERROR+++')
+            sys.exit()
+
+        zero = np.zeros(nominator.shape)
+        z_pos = np.maximum(zero, nominator)
+        z_neg = np.minimum(zero, nominator)
+
+        denominator_pos = np.sum(z_pos, axis=0)
+        denominator_neg = np.sum(z_neg, axis=0)
+
+        fraction_pos = np.divide(z_pos, denominator_pos)
+        fraction_neg = np.divide(z_neg, denominator_neg)
+
+        fraction = (1 - beta) * fraction_pos + beta * fraction_neg
+
+    else:
+        denominator = np.matmul(output,
+                                weights)
+
+        if eps:
+            denominator = denominator + eps * np.sign(denominator)
+
+        fraction = np.divide(nominator, denominator)
+
+    r_new = np.dot(fraction, r)
+
+    return r_new
 
 def plot_value_array(predictions_array, true_label):
     plt.grid(False)
@@ -121,7 +153,7 @@ def plot_value_array(predictions_array, true_label):
 
 
 def plot_rel_prop(model: tf.keras.Sequential,extractor: tf.keras.Model, images: np.ndarray,
-                  input_labels: np.ndarray, data_switch: int, weights: tuple):
+                  input_labels: np.ndarray, data_switch: int, weights: tuple, eps: float, beta: float):
     if data_switch:
         labels = [i for i in range(0, 10)]
     else:
@@ -137,18 +169,28 @@ def plot_rel_prop(model: tf.keras.Sequential,extractor: tf.keras.Model, images: 
         if not data_switch:
             test = np.sum(test, axis=2)
 
-        plt.subplot(3,5,i+1)
+        plt.subplot(4,5,i+1)
         plt.xticks([])
         plt.yticks([])
         plt.grid(False)
         plt.xlabel(label)
         plt.imshow(image)
-        plt.subplot(3,5,i+6)
+        plt.subplot(4,5,i+6)
         plt.xticks([])
         plt.yticks([])
         plt.grid(False)
         plt.imshow(test, cmap='cividis')
-        plt.subplot(3,5,i+11)
+
+        test = rel_prop(model, extractor, image, weights, eps=eps, beta=beta)
+        if not data_switch:
+            test = np.sum(test, axis=2)
+        plt.subplot(4,5,i+11)
+        plt.xticks([])
+        plt.yticks([])
+        plt.grid(False)
+        plt.xlabel(f'eps={eps}, beta={beta}')
+        plt.imshow(test, cmap='cividis')
+        plt.subplot(4,5,i+16)
         pred = model.predict(np.array([image]))[0]
         plot_value_array(pred, input_labels[idx])
 
