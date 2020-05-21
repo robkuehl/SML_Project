@@ -26,13 +26,13 @@ class binary_classifier:
         self.test_labels = data[3]
         
         #make_binary_data
-        self.train_labels = (self.train_labels==self.class_nb).astype(int)*self.class_nb
-        self.test_labels = (self.test_labels==self.class_nb).astype(int)*self.class_nb
+        self.train_labels = (self.train_labels==self.class_nb).astype(int)
+        self.test_labels = (self.test_labels==self.class_nb).astype(int)
 
     def set_model(self):
         
         if self.data_set == 'mnist':
-            input_shape=(28,28)
+            input_shape=(28,28,1)
         else:
             input_shape=(32,32,3)
         
@@ -40,12 +40,12 @@ class binary_classifier:
             model = Sequential([
                 Flatten(input_shape=input_shape),
                 Dense(4096, activation='relu', use_bias=False),
-                Dense(2, activation='softmax', use_bias=False)
+                Dense(1, activation='sigmoid', use_bias=False)
             ])
 
         model.summary()
 
-        model.compile(loss='sparse_categorical_crossentropy',
+        model.compile(loss='binary_crossentropy',
                     optimizer=Adam(),
                     metrics=['acc'])
 
@@ -63,5 +63,5 @@ class binary_classifier:
             )
 
     def predict(self, image):
-        pred = self.model.predict(image)
+        pred = self.model.predict(np.array([image]))
         return pred

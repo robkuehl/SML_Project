@@ -34,7 +34,7 @@ class multi_classifier:
             
     def fit_classifiers(self):
         for cl in self.classifiers:
-            cl.fit_model(10,10)
+            cl.fit_model(3,100)
         
 
     def predict(self, image):
