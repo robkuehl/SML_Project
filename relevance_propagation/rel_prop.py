@@ -7,7 +7,7 @@ from tensorflow.keras.layers import Dense, Flatten, Conv2D, MaxPooling2D
 from tensorflow.keras.layers import ReLU
 from tensorflow.keras.optimizers import Adam
 from sklearn.preprocessing import StandardScaler
-from tensorflow.keras.activations import softmax, relu
+from tensorflow.keras.layers import LeakyReLU
 from tensorflow.keras.datasets import cifar10, mnist
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
@@ -18,19 +18,19 @@ from relevance_propagation.rel_prop_functions import *
 def main():
 
     # set parameters
-    load_saved_model = False
+    load_saved_model = True
     model_type = 'dense'
-    data_switch = 1  # 0: Cifar10
+    data_switch = 0  # 0: Cifar10
                      # 1: MNIST
-    eps = None
-    beta = -1         #Choose either eps or beta
+    eps = 100
+    beta = None         #Choose either eps or beta
 
     # get data
     train_images, train_labels, test_images, test_labels = get_data(data_switch)
 
     # load saved model
     if load_saved_model:
-        model = tf.keras.models.load_model('./models/rel_prop_model.h5')
+        model = tf.keras.models.load_model('./models/rel_prop_model_cifar.h5')
 
     # build, train and save model
     else:

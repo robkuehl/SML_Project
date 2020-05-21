@@ -74,7 +74,7 @@ def get_weights(model: tf.keras.Sequential) -> (np.ndarray, np.ndarray):
 
 
 # Funktion für Relevance Propagation
-def rel_prop(model: tf.keras.Sequential, extractor: tf.keras.Model, input: np.ndarray, weights: tuple, eps: float = 0, beta: float = 0) -> np.ndarray:
+def rel_prop(model: tf.keras.Sequential, extractor: tf.keras.Model, input: np.ndarray, weights: tuple, eps: float = 0, beta: float = None) -> np.ndarray:
     first_weights, second_weights = weights
 
     features = extractor(np.array([input]))
@@ -98,7 +98,7 @@ def rel_prop(model: tf.keras.Sequential, extractor: tf.keras.Model, input: np.nd
                 eps=eps,
                 beta=beta)
 
-    relevance = np.reshape(r0, (28, 28))
+    relevance = np.reshape(r0, input.shape)
 
     return relevance
 
@@ -164,10 +164,12 @@ def plot_rel_prop(model: tf.keras.Sequential,extractor: tf.keras.Model, images: 
     for i in range(0,5):
         idx = i+200
         image = images[idx]
-        label = labels[input_labels[idx]]
-        test = rel_prop(model, extractor, image, weights)
+        test1 = rel_prop(model, extractor, image, weights)
         if not data_switch:
-            test = np.sum(test, axis=2)
+            test1 = np.sum(test1, axis=2)
+            label = labels[input_labels[idx][0]]
+        else:
+            label = labels[input_labels[idx]]
 
         plt.subplot(4,5,i+1)
         plt.xticks([])
@@ -179,7 +181,7 @@ def plot_rel_prop(model: tf.keras.Sequential,extractor: tf.keras.Model, images: 
         plt.xticks([])
         plt.yticks([])
         plt.grid(False)
-        plt.imshow(test, cmap='cividis')
+        plt.imshow(test1, cmap='cividis')
 
         test = rel_prop(model, extractor, image, weights, eps=eps, beta=beta)
         if not data_switch:
@@ -192,6 +194,9 @@ def plot_rel_prop(model: tf.keras.Sequential,extractor: tf.keras.Model, images: 
         plt.imshow(test, cmap='cividis')
         plt.subplot(4,5,i+16)
         pred = model.predict(np.array([image]))[0]
-        plot_value_array(pred, input_labels[idx])
+        if not data_switch:
+            plot_value_array(pred, input_labels[idx][0])
+        else:
+            plot_value_array(pred, input_labels[idx])
 
     plt.show()
