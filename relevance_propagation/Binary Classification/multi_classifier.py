@@ -15,7 +15,7 @@ class multi_classifier:
     def set_data(self):
         if self.which_dataset == 'mnist':
             dataset = mnist
-        else:
+        elif self.which_dataset == 'cifar10':
             dataset = cifar10
 
         (train_images, train_labels), (test_images, test_labels) = dataset.load_data()
