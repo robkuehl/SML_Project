@@ -36,9 +36,9 @@ class multi_classifier:
         return self.classifiers
             
       
-    def fit_classifiers(self):
+    def fit_classifiers(self, epochs, batch_size):
         for cl in self.classifiers:
-            cl.fit_model(3,100)
+            cl.fit_model(epochs, batch_size)
         
 
     def predict(self, image):

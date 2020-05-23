@@ -4,7 +4,7 @@ from tensorflow.keras.datasets import cifar10, mnist
 
 def run_multi():
     mc = multi_classifier(which_dataset='mnist', model_type='dense')
-    mc.fit_classifiers()
+    mc.fit_classifiers(epochs=10, batch_size=10)
     models = mc.get_models()
     # print(mc.predict(mc.data[2][1]))
     
