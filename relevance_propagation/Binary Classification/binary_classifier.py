@@ -9,6 +9,7 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.datasets import cifar10, mnist
 #from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+import random
 
 class binary_classifier:
     
@@ -20,14 +21,27 @@ class binary_classifier:
         
 
     def set_data(self, data):
-        self.train_images = data[0]
-        self.train_labels =  data[1]
+        train_images = data[0]
+        train_labels =  data[1]
         self.test_images = data[2]
         self.test_labels = data[3]
         
         #make_binary_data
-        self.train_labels = (self.train_labels==self.class_nb).astype(int)
+        train_labels = (train_labels==self.class_nb).astype(int)
         self.test_labels = (self.test_labels==self.class_nb).astype(int)
+        
+         # reduce train dataset
+        one_indices = [i for i in range(train_labels.shape[0]) if train_labels[i]==1]
+        zero_indices = [i for i in range(train_labels.shape[0]) if train_labels[i]==0]
+        sampling = random.choices(zero_indices, k=3*len(one_indices))
+        train_indices = one_indices + sampling
+        print("Number of train indices: ", len(train_indices))
+        self.train_images = np.asarray([train_images[i] for i in train_indices])
+        print(self.train_images.shape)
+        self.train_labels = np.asarray([train_labels[i] for i in train_indices])
+        
+        
+        
 
     def set_model(self):
         
@@ -65,3 +79,15 @@ class binary_classifier:
     def predict(self, image):
         pred = self.model.predict(np.array([image]))
         return pred
+    
+    def non_trivial_accuracy(self):
+        answers = []
+        for i in range(len(list(self.test_labels))):
+            if self.test_labels[i]==1:
+                answers.append(int(self.model.predict(self.test_images[i])[0][0]))
+                
+        return sum(answers)/len(answers)
+    
+    def evaluate(self, batch_size):
+        score, acc = self.model.evaluate(self.test_images, self.test_labels,
+                                batch_size=batch_size)
