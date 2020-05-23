@@ -2,6 +2,8 @@ from multi_classifier import multi_classifier
 from binary_classifier import binary_classifier
 from tensorflow.keras.datasets import cifar10, mnist
 from rel_prop_functions import plot_rel_prop
+import time 
+import tensorflow as tf
 
 def run_multi():
     mc = multi_classifier(which_dataset='mnist', model_type='dense')
@@ -25,6 +27,7 @@ def run_binary(dataset, model_type, class_nb):
     print("Model Accuracy for images with label {} : {}".format(class_nb, cl.non_trivial_accuracy()))
     
     model = cl.model
+    model.save('model_{}.h5'.format(time.strftime('%H_%M')))
     plot_rel_prop(model,train_images[10], eps=None, beta=None)
     
 
