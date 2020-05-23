@@ -32,6 +32,10 @@ class multi_classifier:
             cl.set_data(self.data)
             cl.set_model()
             
+    def get_models(self):
+        return self.classifiers
+            
+      
     def fit_classifiers(self):
         for cl in self.classifiers:
             cl.fit_model(3,100)
