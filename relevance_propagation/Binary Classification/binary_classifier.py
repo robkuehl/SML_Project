@@ -84,10 +84,11 @@ class binary_classifier:
         answers = []
         for i in range(len(list(self.test_labels))):
             if self.test_labels[i]==1:
-                answers.append(int(self.model.predict(self.test_images[i])[0][0]))
+                answers.append(int(self.model.predict(np.array([self.test_images[i]]))[0][0]))
                 
         return sum(answers)/len(answers)
     
     def evaluate(self, batch_size):
-        score, acc = self.model.evaluate(self.test_images, self.test_labels,
+        _ , acc = self.model.evaluate(self.test_images, self.test_labels,
                                 batch_size=batch_size)
+        return acc
