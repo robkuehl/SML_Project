@@ -44,5 +44,5 @@ def run_binary(dataset, model_type, class_nb):
     
     
 if __name__ == '__main__':
-    relevances = run_binary(dataset='mnist', model_type='dense', class_nb=5, cmap=None)
+    relevances = run_binary(dataset='mnist', model_type='dense', class_nb=5)
     
