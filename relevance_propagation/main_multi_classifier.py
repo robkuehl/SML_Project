@@ -2,7 +2,7 @@ from multi_classifier import multi_classifier
 from binary_classifier import binary_classifier
 from tensorflow.keras.datasets import cifar10, mnist
 from rel_prop_functions import plot_rel_prop
-import time 
+from rel_prop_functions import rel_prop
 import tensorflow as tf
 
 def run_multi():
@@ -21,17 +21,28 @@ def run_binary(dataset, model_type, class_nb):
     cl = binary_classifier(model_type="dense", data_set=dataset, class_nb=class_nb)
     cl.set_data(data)
     cl.set_model()
-    cl.fit_model(10,10)
+    epochs = 10
+    batch_size = 100
+    cl.fit_model(epochs, batch_size)
 
     print("Model Accuracy: {}".format(cl.evaluate(10)))
     print("Model Accuracy for images with label {} : {}".format(class_nb, cl.non_trivial_accuracy()))
     
     model = cl.model
-    model.save('model_{}.h5'.format(time.strftime('%H_%M')))
-    plot_rel_prop(model,train_images[10], eps=None, beta=None)
+    model.save('./binary_models/model_{}_{}_{}e_{}bs.h5'.format(dataset,model_type,epochs,batch_size))
+    relevances = []
+    for i in range(100):
+        plot_rel_prop(model,test_images[i], eps=None, beta=None)
+        relevances.append(rel_prop(model, test_images[i]))
+    
+    for i in range(len(relevances)):
+        print(test_labels[i], (relevances[i]!=0).any())
+        
+    return relevances
     
 
     
     
 if __name__ == '__main__':
-    run_binary(dataset='mnist', model_type='dense', class_nb=5)
+    relevances = run_binary(dataset='mnist', model_type='dense', class_nb=5, cmap=None)
+    
