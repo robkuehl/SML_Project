@@ -69,9 +69,9 @@ def main_multi():
     print("Multiclassifier Prediction: {}".format(prediction))
     print("Correct Label: {}".format(test_labels[0]))
     
-    one_pred = [prediction[i] for i in len(prediction) if prediction[0]==1]
+    one_pred = [prediction[i] for i in range(len(prediction)) if prediction[i][0]==1]
     for element in one_pred:
-        model = mc.classifiers[element[1]]
+        model = mc.classifiers[element[1]].model
         plot_rel_prop(model, test_images[0], eps=None, beta=None)
     
     
