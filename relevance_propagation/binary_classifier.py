@@ -13,10 +13,10 @@ import random
 
 class binary_classifier:
     
-    def __init__(self, model_type, data_set, class_nb):
+    def __init__(self, model_type, dataset, class_nb):
         self.model_type = model_type
         assert(type(self.model_type)==str)
-        self.data_set = data_set
+        self.dataset = dataset
         self.class_nb = class_nb
         
 
@@ -45,9 +45,9 @@ class binary_classifier:
 
     def set_model(self):
         
-        if self.data_set == 'mnist':
+        if self.dataset == 'mnist':
             input_shape=(28,28,1)
-        else:
+        elif self.dataset == 'cifar10':
             input_shape=(32,32,3)
         
         if self.model_type == "dense":
@@ -67,7 +67,11 @@ class binary_classifier:
 
 
     def fit_model(self, epochs: int, batch_size: int):
-        with tf.device("/gpu:0"):
+        if tf.config.list_physical_devices('GPU'):
+            dev='/gpu:0'
+        else:
+            dev = '/cpu:0'
+        with tf.device(dev):
             self.model.fit(
                 self.train_images,
                 self.train_labels,
@@ -77,7 +81,7 @@ class binary_classifier:
             )
 
     def predict(self, image):
-        pred = self.model.predict(np.array([image]))
+        pred = int(self.model.predict(np.array([image]))[0][0])
         return pred
     
     def non_trivial_accuracy(self):
