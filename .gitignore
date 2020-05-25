@@ -3,3 +3,5 @@ binary_models
 *.h5
 __pycache__
 settings.json
+.ipynb_checkpoints
+.vscode
