@@ -64,8 +64,16 @@ def main_multi():
         
     
     mc = get_multi_cl(dataset=dataset, model_type=model_type)
-    print(mc.predict([test_images[0]]))
+    
+    prediction = mc.predict([test_images[0]])
+    print("Multiclassifier Prediction: {}".format(prediction))
     print("Correct Label: {}".format(test_labels[0]))
+    
+    one_pred = [prediction[i] for i in len(prediction) if prediction[0]==1]
+    for element in one_pred:
+        model = mc.classifiers[element[1]]
+        plot_rel_prop(model, test_images[0], eps=None, beta=None)
+    
     
     
 if __name__ == '__main__':
