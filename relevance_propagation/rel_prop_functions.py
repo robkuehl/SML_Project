@@ -74,8 +74,12 @@ def get_weights(model: tf.keras.Sequential) -> (np.ndarray, np.ndarray):
 
 
 # Funktion für Relevance Propagation
-def rel_prop(model: tf.keras.Sequential, extractor: tf.keras.Model, input: np.ndarray, weights: tuple, eps: float = 0, beta: float = None) -> np.ndarray:
-    first_weights, second_weights = weights
+def rel_prop(model: tf.keras.Sequential, input: np.ndarray, eps: float = 0, beta: float = None) -> np.ndarray:
+    first_weights, second_weights = get_weights(model)
+
+    # Hilfsmodel zum Extrahieren der Outputs des Hidden Layers
+    extractor = tf.keras.Model(inputs=model.inputs,
+                               outputs=[layer.output for layer in model.layers])
 
     features = extractor(np.array([input]))
 
@@ -140,63 +144,32 @@ def calc_r(r: np.ndarray, output: np.ndarray, weights: np.ndarray, eps: int = 0,
 
     return r_new
 
-def plot_value_array(predictions_array, true_label):
-    plt.grid(False)
-    plt.xticks(range(10))
-    plt.yticks([])
-    thisplot = plt.bar(range(10), predictions_array, color="#777777")
-    plt.ylim([0, 1])
-    predicted_label = np.argmax(predictions_array)
-
-    thisplot[predicted_label].set_color('red')
-    thisplot[true_label].set_color('blue')
-
-
-def plot_rel_prop(model: tf.keras.Sequential,extractor: tf.keras.Model, images: np.ndarray,
-                  input_labels: np.ndarray, data_switch: int, weights: tuple, eps: float, beta: float):
-    if data_switch:
-        labels = [i for i in range(0, 10)]
-    else:
-        labels = {0:'airplane', 1:'automobile', 2:'bird', 3:'cat', 4:'deer',
-                  5:'dog', 6:'frog', 7:'horse', 8:'ship', 9:'truck'}
-
+def plot_rel_prop(model: tf.keras.Sequential, image: np.ndarray, eps: float, beta: float):
+    
     # Test und Visualisierung
-    for i in range(0,5):
-        idx = i+200
-        image = images[idx]
-        test1 = rel_prop(model, extractor, image, weights)
-        if not data_switch:
-            test1 = np.sum(test1, axis=2)
-            label = labels[input_labels[idx][0]]
-        else:
-            label = labels[input_labels[idx]]
 
-        plt.subplot(4,5,i+1)
-        plt.xticks([])
-        plt.yticks([])
-        plt.grid(False)
-        plt.xlabel(label)
-        plt.imshow(image)
-        plt.subplot(4,5,i+6)
-        plt.xticks([])
-        plt.yticks([])
-        plt.grid(False)
-        plt.imshow(test1, cmap='cividis')
 
-        test = rel_prop(model, extractor, image, weights, eps=eps, beta=beta)
-        if not data_switch:
-            test = np.sum(test, axis=2)
-        plt.subplot(4,5,i+11)
-        plt.xticks([])
-        plt.yticks([])
-        plt.grid(False)
-        plt.xlabel(f'eps={eps}, beta={beta}')
-        plt.imshow(test, cmap='cividis')
-        plt.subplot(4,5,i+16)
-        pred = model.predict(np.array([image]))[0]
-        if not data_switch:
-            plot_value_array(pred, input_labels[idx][0])
-        else:
-            plot_value_array(pred, input_labels[idx])
+    prop = rel_prop(model, image)
+    
+    # bei MNIST auskommentieren
+    #prop = np.sum(prop, axis=2)
+
+    plt.subplot(2,1,1)
+    plt.xticks([])
+    plt.yticks([])
+    plt.grid(False)
+    plt.imshow(prop, cmap='cividis')
+
+    plt.subplot(2,1,2)
+    plt.xticks([])
+    plt.yticks([])
+    plt.grid(False)
+    
+    
+    prop2 = rel_prop(model, image, eps=eps, beta=beta)
+    
+    # bei MNIST auskommentieren
+    #prop2 = np.sum(prop2, axis=2)
+    plt.imshow(prop2, cmap='cividis')
 
     plt.show()
