@@ -12,25 +12,29 @@ from tensorflow.keras.datasets import cifar10, mnist
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
-from relevance_propagation.rel_prop_functions import *
+from rel_prop_functions import *
 
 
 def main():
-
     # set parameters
-    load_saved_model = True
+    load_saved_model = False
     model_type = 'dense'
     data_switch = 0  # 0: Cifar10
                      # 1: MNIST
-    eps = 100
+    eps = 100.0
     beta = None         #Choose either eps or beta
+
+    #save the model to the corresponding file, also load the corresponding file if load_saved_model is True
+    filepath = './models/rel_prop_model_'
+    modelType = 'cifar' if data_switch==0 else 'mnist'
+    filepath = filepath + modelType + '.h5'
 
     # get data
     train_images, train_labels, test_images, test_labels = get_data(data_switch)
 
     # load saved model
     if load_saved_model:
-        model = tf.keras.models.load_model('./models/rel_prop_model_cifar.h5')
+        model = tf.keras.models.load_model(filepath)
 
     # build, train and save model
     else:
@@ -46,16 +50,17 @@ def main():
                       metrics=['acc'])
 
         model = fit_model(model=model,
-                          epochs=1,
+                          epochs=10,
                           batch_size=1000,
                           train_images=train_images,
                           train_labels=train_labels,
                           test_images=test_images,
-                          test_labels=test_labels)
+                          test_labels=test_labels,
+                          device = 'gpu_marc')
 
         if not os.path.exists('./models/'):
             os.makedirs('./models/')
-        model.save('./models/rel_prop_model.h5')
+        model.save(filepath)
 
     weights = get_weights(model)
 
